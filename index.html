@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIP Calculator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="calculator-card">
+        <h2>SIP Calculator</h2>
+        
+        <div class="input-group">
+            <label for="monthlyAmount">Monthly Investment (₹)</label>
+            <input type="text" id="monthlyAmount" placeholder="e.g. 10,000" inputmode="numeric" oninput="formatInput(this)">
+        </div>
+
+        <div class="input-group">
+            <label for="rate">Expected Returns (% per annum)</label>
+            <input type="text" id="rate" placeholder="e.g. 12" inputmode="numeric">
+        </div>
+
+        <div class="input-group">
+            <label for="years">Time Period (in Years)</label>
+            <input type="text" id="years" placeholder="e.g. 10" inputmode="numeric">
+        </div>
+
+        <button onclick="calculateSIP()"><b>Calculate</b></button>
+
+        <div class="results" id="results" style="display: none;">
+            <div class="result-item">
+                <span>Invested Amount:</span>
+                <span id="invested">₹0</span>
+            </div>
+            <div class="result-item">
+                <span>Estimated Returns:</span>
+                <span id="returns">₹0</span>
+            </div>
+            <div class="result-item total">
+                <span>Total Value:</span>
+                <span id="total">₹0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
