@@ -1,50 +1,96 @@
 // Function to add commas as the user types
-function formatInput(input) {
-    // Remove all existing commas and non-numeric chars
-    let value = input.value.replace(/,/g, '');
+function formatNumber(input) {
+    // Remove the error border as soon as the user starts typing
+    input.classList.remove('error-border');
     
-    if (value !== "") {
-        // Convert to number and format back to Indian style
-        let num = parseFloat(value);
-        if (!isNaN(num)) {
-            input.value = num.toLocaleString('en-IN');
+    let value = input.value.replace(/,/g, '');
+    value = value.replace(/[^0-9.]/g, ''); 
+    
+    if (value.length > 3) {
+        let parts = value.split('.');
+        let integer = parts[0];
+        let decimal = parts.length > 1 ? '.' + parts[1] : '';
+        
+        let lastThree = integer.slice(-3);
+        let otherNumbers = integer.slice(0, -3);
+        
+        if (otherNumbers) {
+            otherNumbers = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+            integer = otherNumbers + "," + lastThree;
         }
+        value = integer + decimal;
     }
+    input.value = value;
 }
 
+// Add this at the top to clear the error as soon as the user types
+document.querySelectorAll('input').forEach(input => {
+    input.addEventListener('input', function() { 
+        // Existing formatting function
+        formatNumber(this); 
+        // Remove red border from the Retirement Calculator logic
+        this.classList.remove('error');
+    });
+});
+
 function calculateSIP() {
-    // 1. Get Values (Removing commas before parsing)
-    const rawAmount = document.getElementById('monthlyAmount').value.replace(/,/g, '');
-    const p = parseFloat(rawAmount);
-    const annualRate = parseFloat(document.getElementById('rate').value);
-    const years = parseFloat(document.getElementById('years').value);
+    const requiredFields = ['monthlyAmount', 'rate', 'years'];
+    let isValid = true;
 
-    // 2. Validate Input
-    if (isNaN(p) || isNaN(annualRate) || isNaN(years)) {
-        alert("Please enter valid numbers");
-        return;
-    }
+    // 1. Validation Logic
+    requiredFields.forEach(id => {
+        const element = document.getElementById(id);
+        if (element.value.trim() === "") {
+            element.classList.add('error');
+            isValid = false;
+        } else {
+            element.classList.remove('error');
+        }
+    });
 
-    // 3. Math Variables
+    if (!isValid) return;
+
+    // 2. Calculation Logic
+    const getVal = id => parseFloat(document.getElementById(id).value.replace(/,/g, '')) || 0;
+
+    const p = getVal('monthlyAmount');
+    const annualRate = getVal('rate');
+    const years = getVal('years');
+
     const i = (annualRate / 100) / 12; // Monthly rate
-    const n = years * 12;              // Total months
+    const n = years * 12;               // Total months
 
-    // 4. Ordinary Annuity Formula: FV = P × [((1 + i)^n - 1) / i]
+    // SIP Formula: FV = P × [((1 + i)^n - 1) / i]
+    // Note: Most Indian SIP calculators include the (1+i) for start-of-period payments
     const totalValue = p * ((Math.pow(1 + i, n) - 1) / i);
     
     const investedAmount = p * n;
     const estimatedReturns = totalValue - investedAmount;
 
-    // 5. Update UI
-    document.getElementById('invested').innerText = formatCurrency(investedAmount);
-    document.getElementById('returns').innerText = formatCurrency(estimatedReturns);
-    document.getElementById('total').innerText = formatCurrency(totalValue);
+    // 3. Formatting Logic (Consistent with Lumpsum/Retirement)
+    const formatToWords = num => {
+        if (num >= 10000000) { // Crore
+            const value = Math.ceil((num / 10000000) * 100) / 100;
+            return `₹${value.toFixed(2)} Crore`;
+        } else if (num >= 100000) { // Lakh
+            const value = Math.ceil((num / 100000) * 100) / 100;
+            return `₹${value.toFixed(2)} Lakh`;
+        } else {
+            let integer = Math.ceil(num).toString();
+            if (integer.length > 3) {
+                let lastThree = integer.slice(-3);
+                let otherNumbers = integer.slice(0, -3);
+                otherNumbers = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",");
+                integer = otherNumbers + "," + lastThree;
+            }
+            return "₹" + integer;
+        }
+    };
 
-    // Show results section
+    // 4. Display Results
+    document.getElementById('invested').innerText = formatToWords(investedAmount);
+    document.getElementById('returns').innerText = formatToWords(estimatedReturns);
+    document.getElementById('total').innerText = formatToWords(totalValue);
+
     document.getElementById('results').style.display = 'block';
-}
-
-// Helper to format results with commas
-function formatCurrency(num) {
-    return "₹" + Math.round(num).toLocaleString('en-IN');
 }
